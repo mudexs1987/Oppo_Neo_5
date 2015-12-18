@@ -17,3 +17,5 @@
 /include/ "dsi-panel-nt35590-720p-cmd.dtsi"
 /include/ "dsi-panel-ssd2080m-720p-video.dtsi"
 /include/ "dsi-panel-jdi-1080p-video.dtsi"
+/include/ "dsi-panel-oppo14013tm-fwvga-video.dtsi"
+/include/ "dsi-panel-oppo14013truly-fwvga-video.dtsi"
