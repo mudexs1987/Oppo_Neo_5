@@ -35,7 +35,6 @@
 #include <mach/oppo_project.h>
 #include <linux/gpio.h>
 #include <linux/proc_fs.h>
-#include <mach/oppo_boot_mode.h>
 
 struct dsi_status_data {
 	struct notifier_block fb_notifier;
@@ -245,12 +244,6 @@ static int fb_event_callback(struct notifier_block *self,
 int __init mdss_dsi_status_init(void)
 {
 	int rc = 0;
-	int boot_mode = 0;
-
-	boot_mode = get_boot_mode();
-
-	if(boot_mode != MSM_BOOT_MODE__NORMAL)
-	   return rc;
 
 	pstatus_data = kzalloc(sizeof(struct dsi_status_data), GFP_KERNEL);
 	if (!pstatus_data) {
