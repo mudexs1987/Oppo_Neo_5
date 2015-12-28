@@ -48,31 +48,12 @@ GAMMA_YELLOW,
 };
 //caven.han@basic.drv Added for ESD_CHECK
  bool  lcd_is_suspended =false;
-//CABC function://caven.han apply
-struct dsi_panel_cmds cabc_off_sequence;
-struct dsi_panel_cmds cabc_user_interface_image_sequence;
-struct dsi_panel_cmds cabc_still_image_sequence;
-struct dsi_panel_cmds cabc_video_image_sequence;
 
 #define DSI_BUF_SIZE	1024
 
 static struct mdss_dsi_ctrl_pdata *panel_data;
 static void mdss_dsi_panel_cmds_send(struct mdss_dsi_ctrl_pdata *ctrl,
 			struct dsi_panel_cmds *pcmds);
-
-extern int set_backlight_pwm(int state);
-
-enum
-{
-    CABC_CLOSE = 0,
-    CABC_LOW_MODE,
-    CABC_MIDDLE_MODE,
-    CABC_HIGH_MODE,
-};
-
-int cabc_mode = CABC_HIGH_MODE; //defaoult mode level 3 in dtsi file
-
-static DEFINE_MUTEX(cabc_mutex);
 
 void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 {
