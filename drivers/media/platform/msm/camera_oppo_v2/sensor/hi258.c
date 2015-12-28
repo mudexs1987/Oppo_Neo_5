@@ -2531,8 +2531,6 @@ int32_t hi258_sensor_config(struct msm_sensor_ctrl_t *s_ctrl,
 		CDBG("Set wb X");
 		break;
 	}
-#ifdef VENDOR_EDIT
-//OPPO zhangkw add case to send exp and iso to user space
 	case CFG_GET_YUV_INFO: {
 		cdata->cfg.yuv_info.exp_time= hi258_get_exp(s_ctrl);
 		cdata->cfg.yuv_info.iso= hi258_get_iso(s_ctrl);
@@ -2540,7 +2538,6 @@ int32_t hi258_sensor_config(struct msm_sensor_ctrl_t *s_ctrl,
 			cdata->cfg.yuv_info.exp_time, cdata->cfg.yuv_info.iso);
 		break;
 	}
-#endif
 	default:
 		rc = -EFAULT;
 		break;
