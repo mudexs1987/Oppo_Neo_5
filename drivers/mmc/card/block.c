@@ -41,14 +41,13 @@
 #include <linux/mmc/host.h>
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/sd.h>
+#include <linux/pcb_version.h>
 
 #include <asm/uaccess.h>
+#include <mach/device_info.h>
 
 #include "queue.h"
 
-//Zhilong.Zhang@OnlineRd.Driver, 2013/10/24, Add for eMMC and DDR device information
-#include <mach/device_info.h>
-#include <linux/pcb_version.h>
 
 MODULE_ALIAS("mmc:block");
 #ifdef MODULE_PARAM_PREFIX
@@ -3120,7 +3119,6 @@ static int mmc_blk_probe(struct mmc_card *card)
 {
 	struct mmc_blk_data *md, *part_md;
 	char cap_str[10];
-	//Zhilong.Zhang@OnlineRd.Driver, 2013/10/24, Add for eMMC and DDR device information
 	char * manufacturerid;
 
 	/*
@@ -3128,16 +3126,9 @@ static int mmc_blk_probe(struct mmc_card *card)
 	 */
 	if (!(card->csd.cmdclass & CCC_BLOCK_READ))
 		return -ENODEV;
-	//Zhilong.Zhang@OnlineRd.Driver, 2013/10/24, Add for eMMC and DDR device information
 	switch (card->cid.manfid) {
-		case  0x11:
-			manufacturerid = "TOSHIBA";
-			break;
 		case  0x15:
 			manufacturerid = "SAMSUNG";
-			break;
-		case  0x45:
-			manufacturerid = "SANDISK";
 			break;
 		default:
 			manufacturerid = "unknown";
