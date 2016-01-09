@@ -988,10 +988,35 @@ static int fastrpc_internal_invoke(struct fastrpc_apps *me, uint32_t mode,
 	if (err)
 		goto bail;
  bail:
-	if (ctx && interrupted == -ERESTARTSYS)
-		context_save_interrupted(ctx);
-	else if (ctx)
-		context_free(ctx, 1);
+	if (interrupted) {
+		if (!kernel)
+			(void)fastrpc_release_current_dsp_process();
+		wait_for_completion(&ctx->work);
+	}
+	context_free(ctx);
+
+	if (me->smmu.enabled) {
+		bufs = REMOTE_SCALARS_INBUFS(sc) + REMOTE_SCALARS_OUTBUFS(sc);
+		if (fds) {
+			handles = (struct ion_handle **)(fds + bufs);
+			for (i = 0; i < bufs; i++)
+				if (!IS_ERR_OR_NULL(handles[i])) {
+					ion_unmap_iommu(me->iclient, handles[i],
+							me->smmu.domain_id, 0);
+					ion_free(me->iclient, handles[i]);
+				}
+		}
+		iommu_detach_group(me->smmu.domain, me->smmu.group);
+	}
+	for (i = 0, b = abufs; i < nbufs; ++i, ++b)
+		free_mem(b);
+
+	kfree(abufs);
+	if (dev) {
+		add_dev(me, dev);
+		if (obuf.handle != dev->buf.handle)
+			free_mem(&obuf);
+	}
 	return err;
 }
 

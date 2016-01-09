@@ -677,11 +677,6 @@ static int qseecom_set_client_mem_param(struct qseecom_dev_handle *data,
 	}
 	/* Get the physical address of the ION BUF */
 	ret = ion_phys(qseecom.ion_clnt, data->client.ihandle, &pa, &len);
-	if (len < req.sb_len) {
-		pr_err("Requested length (0x%x) is > allocated (0x%x)\n",
-			req.sb_len, len);
-		return -EINVAL;
-	}
 	/* Populate the structure for sending scm call to load image */
 	data->client.sb_virt = (char *) ion_map_kernel(qseecom.ion_clnt,
 							data->client.ihandle);
@@ -1292,6 +1287,11 @@ static int __qseecom_send_cmd(struct qseecom_dev_handle *data,
 		return -EINVAL;
 	}
 
+	if (req->cmd_req_len > UINT_MAX - req->resp_len) {
+		pr_err("Integer overflow detected in req_len & rsp_len, exiting now\n");
+		return -EINVAL;
+	}
+
 	reqd_len_sb_in = req->cmd_req_len + req->resp_len;
 	if (reqd_len_sb_in > data->client.sb_length) {
 		pr_debug("Not enough memory to fit cmd_buf and "
@@ -1542,6 +1542,13 @@ static int qseecom_send_modfd_cmd(struct qseecom_dev_handle *data,
 		pr_err("response buffer address not within shared bufffer\n");
 		return -EINVAL;
 	}
+
+	if (req.cmd_req_len == 0 || req.cmd_req_len > data->client.sb_length ||
+		req.resp_len > data->client.sb_length) {
+		pr_err("cmd or response buffer length not valid\n");
+		return -EINVAL;
+	}
+
 	send_cmd_req.cmd_req_buf = req.cmd_req_buf;
 	send_cmd_req.cmd_req_len = req.cmd_req_len;
 	send_cmd_req.resp_buf = req.resp_buf;
@@ -1596,7 +1603,7 @@ static int qseecom_receive_req(struct qseecom_dev_handle *data)
 		if (wait_event_freezable(this_lstnr->rcv_req_wq,
 				__qseecom_listener_has_rcvd_req(data,
 				this_lstnr))) {
-			pr_debug("Interrupted: exiting Listener Service = %d\n",
+			pr_warning("Interrupted: exiting Listener Service = %d\n",
 						(uint32_t)data->listener.id);
 			/* woken up for different reason */
 			return -ERESTARTSYS;
@@ -2204,6 +2211,14 @@ static int qseecom_send_modfd_resp(struct qseecom_dev_handle *data,
 	if (resp.resp_buf_ptr == NULL) {
 		pr_err("Invalid resp_buf_ptr\n");
 		return -EINVAL;
+	}
+	/* validate offsets */
+	for (i = 0; i < MAX_ION_FD; i++) {
+		if (resp.ifd_data[i].cmd_buf_offset >= resp.resp_len) {
+			pr_err("Invalid offset %d = 0x%x\n",
+				i, resp.ifd_data[i].cmd_buf_offset);
+			return -EINVAL;
+		}
 	}
 	/* validate offsets */
 	for (i = 0; i < MAX_ION_FD; i++) {
@@ -3202,7 +3217,7 @@ static long qseecom_ioctl(struct file *file, unsigned cmd,
 		ret = qseecom_receive_req(data);
 		atomic_dec(&data->ioctl_count);
 		wake_up_all(&data->abort_wq);
-		if (ret && (ret != -ERESTARTSYS))
+		if (ret)
 			pr_err("failed qseecom_receive_req: %d\n", ret);
 		break;
 	}

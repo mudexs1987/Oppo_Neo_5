@@ -222,6 +222,19 @@ void extract_dci_pkt_rsp(struct diag_smd_info *smd_info, unsigned char *buf)
 		return;
 	}
 	pr_debug("diag: len = %d\n", write_len);
+	/* look up DCI client with tag */
+	for (i = 0; i < dci_max_reg; i++) {
+		if (driver->req_tracking_tbl[i].tag ==
+					 *(int *)(buf+(4+cmd_code_len))) {
+			*(int *)(buf+4+cmd_code_len) =
+					driver->req_tracking_tbl[i].uid;
+			curr_client_pid =
+					 driver->req_tracking_tbl[i].pid;
+			index = i;
+			break;
+		}
+	}
+	pr_debug("diag: len = %d\n", write_len);
 	tag = (int *)(buf + (4 + cmd_code_len)); /* Retrieve the Tag field */
 	req_entry = diag_dci_get_request_entry(*tag);
 	if (!req_entry) {

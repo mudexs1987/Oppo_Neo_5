@@ -233,9 +233,9 @@ struct wcd9xxx_mbhc_config {
 	bool use_int_rbias;
 	bool do_recalibration;
 	bool use_vddio_meas;
-    	/*xiaojun.lv@PhoneDpt.AudioDrv, 2014/03/16, add for 14033 spk control*/
-    	int cdc_bootst_spk_gpio;
-    	int cdc_enable_spk_gpio;
+	/*xiaojun.lv@PhoneDpt.AudioDrv, 2014/03/16, add for 14033 spk control*/
+	int cdc_bootst_spk_gpio;
+	int cdc_enable_spk_gpio;
 };
 
 struct wcd9xxx_cfilt_mode {

@@ -163,6 +163,8 @@ static DEFINE_SPINLOCK(reg_spinlock);
 
 #define MAC_ADDRESS_STR "%02x:%02x:%02x:%02x:%02x:%02x"
 
+#define MAC_ADDRESS_STR "%02x:%02x:%02x:%02x:%02x:%02x"
+
 /* message types */
 #define WCNSS_CTRL_MSG_START	0x01000000
 #define	WCNSS_VERSION_REQ             (WCNSS_CTRL_MSG_START + 0)

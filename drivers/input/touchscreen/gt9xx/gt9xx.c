@@ -2049,8 +2049,8 @@ Output:
 *******************************************************/
 static int goodix_ts_resume(struct device *dev)
 {
-	struct goodix_ts_data *ts = dev_get_drvdata(dev);
-	int ret = 0;
+	int ret = -1;
+	int i;
 
 	mutex_lock(&ts->lock);
 	ret = gtp_wakeup_sleep(ts);
@@ -2061,6 +2061,14 @@ static int goodix_ts_resume(struct device *dev)
 
 	if (ret <= 0)
 		dev_err(&ts->client->dev, "GTP resume failed.\n");
+
+	for (i = 0; i < GTP_MAX_TOUCH; i++)
+		gtp_touch_down(ts, i, 1, 1, 1);
+	input_sync(ts->input_dev);
+
+	for (i = 0; i < GTP_MAX_TOUCH; i++)
+		gtp_touch_up(ts, i);
+	input_sync(ts->input_dev);
 
 	if (ts->use_irq)
 		gtp_irq_enable(ts);
