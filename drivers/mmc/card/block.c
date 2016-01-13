@@ -41,10 +41,13 @@
 #include <linux/mmc/host.h>
 #include <linux/mmc/mmc.h>
 #include <linux/mmc/sd.h>
+#include <linux/pcb_version.h>
 
 #include <asm/uaccess.h>
+#include <mach/device_info.h>
 
 #include "queue.h"
+
 
 MODULE_ALIAS("mmc:block");
 #ifdef MODULE_PARAM_PREFIX
@@ -3116,12 +3119,24 @@ static int mmc_blk_probe(struct mmc_card *card)
 {
 	struct mmc_blk_data *md, *part_md;
 	char cap_str[10];
+	char * manufacturerid;
 
 	/*
 	 * Check that the card supports the command class(es) we need.
 	 */
 	if (!(card->csd.cmdclass & CCC_BLOCK_READ))
 		return -ENODEV;
+	switch (card->cid.manfid) {
+		case  0x15:
+			manufacturerid = "SAMSUNG";
+			break;
+		default:
+			manufacturerid = "unknown";
+			break;
+	}
+	if (!strcmp(mmc_card_id(card), "mmc0:0001")) {
+		register_device_proc("emmc", mmc_card_name(card), manufacturerid);
+	}
 
 	md = mmc_blk_alloc(card);
 	if (IS_ERR(md))

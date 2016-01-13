@@ -21,12 +21,17 @@
 #include <linux/leds.h>
 #include <linux/pwm.h>
 #include <linux/err.h>
-
 #include "mdss_dsi.h"
+#include <mach/oppo_project.h>
+#include <linux/switch.h>
+#include <linux/proc_fs.h>
+#include <mach/device_info.h>
 
 #define DT_CMD_HDR 6
 
 DEFINE_LED_TRIGGER(bl_led_trigger);
+//caven.han@basic.drv Added for ESD_CHECK
+bool lcd_is_suspended = false;
 
 void mdss_dsi_panel_pwm_cfg(struct mdss_dsi_ctrl_pdata *ctrl)
 {
@@ -324,6 +329,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	if (ctrl->on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->on_cmds);
 
+	lcd_is_suspended = false;
 	pr_debug("%s:-\n", __func__);
 	return 0;
 }
@@ -338,6 +344,8 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 		return -EINVAL;
 	}
 
+	//Added by hantong to declear lcd suspended
+	lcd_is_suspended = true;
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
@@ -968,6 +976,14 @@ int mdss_dsi_panel_init(struct device_node *node,
 						__func__, __LINE__);
 	else
 		pr_info("%s: Panel Name = %s\n", __func__, panel_name);
+
+	if(!strcmp(panel_name,"oppo14013tm fwvga video mode dsi panel"))
+		register_device_proc("lcd", "HX8389", "Tianma");
+	else if(!strcmp(panel_name,"oppo14013truly fwvga video mode dsi panel"))
+		register_device_proc("lcd", "HX8389", "Truly");
+	else
+		register_device_proc("lcd", "UNKNOWN", "UNKNOWN");
+
 
 	rc = mdss_panel_parse_dt(node, ctrl_pdata);
 	if (rc) {

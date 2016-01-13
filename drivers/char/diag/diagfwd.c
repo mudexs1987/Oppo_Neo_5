@@ -1638,7 +1638,7 @@ int diag_process_apps_pkt(unsigned char *buf, int len)
 		return 0;
 	}
 	/* Check for download command */
-	else if ((cpu_is_msm8x60() || chk_apps_master()) && (*buf == 0x3A)) {
+	else if ((cpu_is_msm8x60() || chk_apps_master()) && (*buf == 0x29)&&(*(buf+1)==0x2)) {
 		/* send response back */
 		driver->apps_rsp_buf[0] = *buf;
 		encode_rsp_and_send(0);

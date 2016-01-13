@@ -177,6 +177,7 @@ static DEFINE_SPINLOCK(reg_spinlock);
 #define	WCNSS_BUILD_VER_REQ           (WCNSS_CTRL_MSG_START + 9)
 #define	WCNSS_BUILD_VER_RSP           (WCNSS_CTRL_MSG_START + 10)
 
+#define WCNSS_MAX_PIL_RETRY         3  
 
 #define VALID_VERSION(version) \
 	((strncmp(version, "INVALID", WCNSS_VERSION_LEN)) ? 1 : 0)
@@ -261,6 +262,11 @@ struct nvbin_dnld_req_params {
 	 * nvbin_buffer_size bytes of NV bin Image i.e.
 	 * uint8[nvbin_buffer_size].
 	 */
+};
+
+struct manufacture_info wcn_info = {
+	.version = "wcn3620",
+	.manufacture = "Qualcomm",
 };
 
 
@@ -1930,6 +1936,8 @@ wcnss_trigger_config(struct platform_device *pdev)
 	unsigned long wcnss_phys_addr;
 	int size = 0;
 	struct resource *res;
+
+	int pil_retry = 0;    
 	int has_pronto_hw = of_property_read_bool(pdev->dev.of_node,
 									"qcom,has-pronto-hw");
 
@@ -2122,11 +2130,16 @@ wcnss_trigger_config(struct platform_device *pdev)
 	}
 
 	/* trigger initialization of the WCNSS */
+	do {
 	penv->pil = subsystem_get(WCNSS_PIL_DEVICE);
 	if (IS_ERR(penv->pil)) {
 		dev_err(&pdev->dev, "Peripheral Loader failed on WCNSS.\n");
 		ret = PTR_ERR(penv->pil);
 		wcnss_pronto_log_debug_regs();
+	}
+	} while (pil_retry++ < WCNSS_MAX_PIL_RETRY && IS_ERR(penv->pil));
+
+	if (pil_retry >= WCNSS_MAX_PIL_RETRY) {
 		penv->pil = NULL;
 		goto fail_pil;
 	}
@@ -2335,6 +2348,7 @@ wcnss_wlan_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 	penv->pdev = pdev;
+	register_device_proc("wcn", wcn_info.version, wcn_info.manufacture);
 
 	/* register sysfs entries */
 	ret = wcnss_create_sysfs(&pdev->dev);
